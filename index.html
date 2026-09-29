@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Flying Bird - Gauss</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif;background:#62cfff}
+body{display:flex;justify-content:center;align-items:center}
+#game{position:relative;width:100vw;height:100vh;max-width:600px;overflow:hidden;background:linear-gradient(to bottom,#48c7ff 0%,#8de4ff 55%,#dcf8ff 100%);touch-action:none}
+#customBackground{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;display:none}
+.sky{position:absolute;inset:0;z-index:1;pointer-events:none}
+.sun{position:absolute;width:100px;height:100px;border-radius:50%;right:12%;top:8%;background:#fff4a3;box-shadow:0 0 30px rgba(255,245,170,.8),0 0 70px rgba(255,245,170,.5)}
+.cloud{position:absolute;width:130px;height:45px;background:rgba(255,255,255,.88);border-radius:50px;animation:cloudMove linear infinite}
+.cloud:before,.cloud:after{content:"";position:absolute;background:inherit;border-radius:50%}
+.cloud:before{width:55px;height:55px;left:20px;bottom:10px}
+.cloud:after{width:70px;height:70px;right:15px;bottom:5px}
+.cloud1{top:18%;left:-160px;animation-duration:28s}
+.cloud2{top:34%;left:-220px;transform:scale(.7);animation-duration:36s;animation-delay:-10s}
+.cloud3{top:10%;left:-180px;transform:scale(.5);animation-duration:45s;animation-delay:-20s}
+@keyframes cloudMove{from{left:-220px}to{left:110%}}
+.ground{position:absolute;z-index:8;bottom:0;left:0;width:100%;height:75px;background:repeating-linear-gradient(135deg,#66bd43 0,#66bd43 18px,#55a83a 18px,#55a83a 36px);border-top:7px solid #9be65e}
+.ground:after{content:"";position:absolute;top:14px;width:100%;height:3px;background:rgba(255,255,255,.2)}
+#bird{position:absolute;z-index:6;left:24%;top:45%;width:55px;height:55px;transform-origin:center;user-select:none}
+.bird-body{position:absolute;width:44px;height:40px;left:4px;top:7px;border-radius:55% 50% 45% 55%;background:linear-gradient(135deg,#ffe84d,#ffbd28);box-shadow:inset -5px -5px 0 rgba(210,130,0,.15),0 4px 7px rgba(0,0,0,.2)}
+.eye{position:absolute;width:10px;height:10px;background:white;border-radius:50%;right:8px;top:7px}
+.eye:after{content:"";position:absolute;width:5px;height:5px;background:#111;border-radius:50%;right:0;top:2px}
+.beak{position:absolute;right:-12px;top:19px;width:18px;height:11px;background:#ff7b22;clip-path:polygon(0 0,100% 50%,0 100%)}
+.wing{position:absolute;width:27px;height:18px;left:-3px;top:19px;border-radius:80% 20% 80% 20%;background:#f3a91e;transform-origin:right center;animation:flap .18s infinite alternate ease-in-out}
+@keyframes flap{from{transform:rotate(18deg)}to{transform:rotate(-28deg)}}
+.tail{position:absolute;left:-8px;top:18px;width:15px;height:20px;background:#f5a91f;clip-path:polygon(100% 50%,0 0,20% 100%)}
+.pipe{position:absolute;z-index:4;width:70px;background:linear-gradient(90deg,#259c3e,#57d65b,#259c3e);border:3px solid #16742b;box-shadow:inset 5px 0 rgba(255,255,255,.2)}
+.pipe:after{content:"";position:absolute;left:-7px;width:84px;height:28px;background:linear-gradient(90deg,#218d39,#62dc65,#218d39);border:3px solid #16742b;border-radius:3px}
+.pipe.top{top:0}.pipe.top:after{bottom:-3px}.pipe.bottom{bottom:75px}.pipe.bottom:after{top:-3px}
+#score{position:absolute;z-index:10;top:25px;left:50%;transform:translateX(-50%);color:white;font-size:48px;font-weight:bold;text-shadow:3px 3px 0 rgba(0,0,0,.25),0 4px 10px rgba(0,0,0,.15)}
+#creatorWatermark{position:absolute;z-index:11;top:12px;left:14px;color:rgba(255,255,255,.75);font-size:12px;font-weight:bold;letter-spacing:1px;text-shadow:1px 2px 3px rgba(0,0,0,.35);pointer-events:none}
+#startScreen,#gameOver{position:absolute;z-index:20;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.18);backdrop-filter:blur(2px)}
+#gameOver{display:none}
+.title{color:white;font-size:45px;font-weight:900;text-align:center;text-shadow:4px 4px 0 rgba(0,0,0,.25);margin-bottom:10px}
+.subtitle{color:white;font-size:17px;text-align:center;line-height:1.5;margin-bottom:25px;text-shadow:2px 2px 3px rgba(0,0,0,.25)}
+button,.fileButton{border:none;border-radius:15px;padding:14px 28px;margin:6px;font-size:17px;font-weight:bold;color:white;background:#ff9d28;box-shadow:0 5px 0 #c66c0b,0 8px 15px rgba(0,0,0,.2);cursor:pointer}
+button:active,.fileButton:active{transform:translateY(4px);box-shadow:0 1px 0 #c66c0b,0 4px 8px rgba(0,0,0,.2)}
+.fileButton{background:#397fe8;box-shadow:0 5px 0 #2456a1}
+input[type=file]{display:none}
+.creator{margin-top:18px;color:rgba(255,255,255,.92);font-size:14px;letter-spacing:1px;text-shadow:1px 2px 3px rgba(0,0,0,.35)}
+.creator b{font-weight:900}
+.highscore{color:white;font-size:19px;margin-bottom:12px;text-shadow:2px 2px 3px rgba(0,0,0,.3)}
+.particle{position:absolute;z-index:5;width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.8);pointer-events:none}
+@media(max-width:450px){#score{font-size:42px}.title{font-size:38px}.pipe{width:62px}.pipe:after{width:76px}}
+</style>
+</head>
+<body>
+<div id="game">
+<div class="sky"><div class="sun"></div><div class="cloud cloud1"></div><div class="cloud cloud2"></div><div class="cloud cloud3"></div></div>
+<img id="customBackground">
+<div id="score">0</div>
+<div id="creatorWatermark">GAUSS</div>
+<div id="bird"><div class="tail"></div><div class="bird-body"></div><div class="wing"></div><div class="eye"></div><div class="beak"></div></div>
+<div class="ground"></div>
+
+<div id="startScreen">
+<div class="title">FLYING BIRD</div>
+<div class="subtitle">Tap / klik untuk terbang<br>Hindari semua rintangan</div>
+<button id="startButton">MULAI</button>
+<label class="fileButton">PILIH BACKGROUND PNG<input type="file" id="backgroundInput" accept="image/png,image/jpeg,image/webp"></label>
+<div class="creator">Dibuat oleh <b>Gauss</b></div>
+</div>
+
+<div id="gameOver">
+<div class="title">GAME OVER</div>
+<div class="highscore">Score: <span id="finalScore">0</span></div>
+<div class="highscore">Best: <span id="bestScore">0</span></div>
+<button id="restartButton">MAIN LAGI</button>
+<label class="fileButton">GANTI BACKGROUND<input type="file" id="backgroundInput2" accept="image/png,image/jpeg,image/webp"></label>
+<div class="creator">Dibuat oleh <b>Gauss</b></div>
+</div>
+</div>
+
+<script>
+const game=document.getElementById("game"),bird=document.getElementById("bird"),scoreText=document.getElementById("score");
+const startScreen=document.getElementById("startScreen"),gameOverScreen=document.getElementById("gameOver");
+const startButton=document.getElementById("startButton"),restartButton=document.getElementById("restartButton");
+const finalScore=document.getElementById("finalScore"),bestScore=document.getElementById("bestScore");
+const customBackground=document.getElementById("customBackground"),backgroundInput=document.getElementById("backgroundInput"),backgroundInput2=document.getElementById("backgroundInput2");
+
+let birdY,velocity,pipes=[],score=0,gameRunning=false,gameOverState=false,lastTime=0,pipeTimer=0;
+const gravity=.42,jumpPower=-7.5;
+let best=Number(localStorage.getItem("flyingBirdBest"))||0;
+bestScore.textContent=best;
+
+function groundHeight(){return 75}
+
+function startGame(){
+pipes.forEach(p=>{p.top.remove();p.bottom.remove()});pipes=[];
+score=0;scoreText.textContent="0";birdY=game.clientHeight*.45;velocity=0;
+bird.style.top=birdY+"px";bird.style.transform="rotate(0deg)";pipeTimer=0;
+gameOverState=false;gameRunning=true;startScreen.style.display="none";gameOverScreen.style.display="none";
+lastTime=performance.now();requestAnimationFrame(gameLoop);
+}
+
+function jump(){
+if(!gameRunning)return;
+velocity=jumpPower;createParticles(bird.offsetLeft+10,birdY+35);
+}
+
+function createPipe(){
+const h=game.clientHeight,ground=groundHeight();
+const gap=Math.max(145,Math.min(190,h*.22)),minTop=80;
+const maxTop=h-ground-gap-80;
+const topHeight=minTop+Math.random()*Math.max(20,maxTop-minTop);
+const bottomHeight=h-ground-topHeight-gap;
+const topPipe=document.createElement("div"),bottomPipe=document.createElement("div");
+topPipe.className="pipe top";topPipe.style.height=topHeight+"px";topPipe.style.left=h*0+game.clientWidth+20+"px";
+bottomPipe.className="pipe bottom";bottomPipe.style.height=bottomHeight+"px";bottomPipe.style.left=game.clientWidth+20+"px";
+game.appendChild(topPipe);game.appendChild(bottomPipe);
+pipes.push({top:topPipe,bottom:bottomPipe,x:game.clientWidth+20,scored:false});
+}
+
+function updatePipes(delta){
+const difficulty=Math.min(score*.006,.12),speed=(.24+difficulty)*delta;
+for(let i=pipes.length-1;i>=0;i--){
+const p=pipes[i];p.x-=speed;p.top.style.left=p.x+"px";p.bottom.style.left=p.x+"px";
+if(!p.scored&&p.x+70<bird.offsetLeft){p.scored=true;score++;scoreText.textContent=score;createScoreParticles()}
+if(p.x<-100){p.top.remove();p.bottom.remove();pipes.splice(i,1)}
+}
+}
+
+function collision(){
+const bx=bird.offsetLeft+5,by=birdY+6,bw=42,bh=40;
+if(by+bh>=game.clientHeight-groundHeight()||by<=0)return true;
+for(const p of pipes){
+const px=p.x,pw=70;
+if(bx+bw>px&&bx<px+pw){
+const topHeight=parseFloat(p.top.style.height);
+const bottomTop=game.clientHeight-groundHeight()-parseFloat(p.bottom.style.height);
+if(by<topHeight||by+bh>bottomTop)return true;
+}}
+return false;
+}
+
+function gameLoop(time){
+if(!gameRunning)return;
+const delta=Math.min(time-lastTime,32);lastTime=time;
+velocity+=gravity*(delta/16.67);birdY+=velocity*(delta/16.67);
+bird.style.top=birdY+"px";
+const rotation=Math.max(-25,Math.min(90,velocity*5));bird.style.transform=`rotate(${rotation}deg)`;
+pipeTimer+=delta;if(pipeTimer>1550){createPipe();pipeTimer=0}
+updatePipes(delta);
+if(collision()){endGame();return}
+if(Math.random()<.08)createParticles(Math.random()*game.clientWidth,Math.random()*game.clientHeight);
+requestAnimationFrame(gameLoop);
+}
+
+function endGame(){
+gameRunning=false;gameOverState=true;finalScore.textContent=score;
+if(score>best){best=score;localStorage.setItem("flyingBirdBest",best)}
+bestScore.textContent=best;gameOverScreen.style.display="flex";
+createExplosion(bird.offsetLeft+25,birdY+25);
+}
+
+function createParticles(x,y){
+for(let i=0;i<3;i++){
+const particle=document.createElement("div");particle.className="particle";particle.style.left=x+"px";particle.style.top=y+"px";game.appendChild(particle);
+let life=0,angle=Math.random()*Math.PI*2,speed=Math.random()*2+1;
+const interval=setInterval(()=>{
+life++;particle.style.left=(x+Math.cos(angle)*speed*life)+"px";particle.style.top=(y+Math.sin(angle)*speed*life)+"px";particle.style.opacity=1-life/20;
+if(life>=20){clearInterval(interval);particle.remove()}
+},16);
+}}
+function createScoreParticles(){createParticles(bird.offsetLeft+20,birdY+20)}
+function createExplosion(x,y){
+for(let i=0;i<18;i++){
+const p=document.createElement("div");p.className="particle";p.style.left=x+"px";p.style.top=y+"px";game.appendChild(p);
+let life=0,angle=Math.random()*Math.PI*2,speed=Math.random()*4+2;
+const timer=setInterval(()=>{
+life++;p.style.left=x+Math.cos(angle)*speed*life+"px";p.style.top=y+Math.sin(angle)*speed*life+"px";p.style.opacity=1-life/30;
+if(life>=30){clearInterval(timer);p.remove()}
+},16);
+}}
+
+function loadBackground(file){
+if(!file)return;
+const reader=new FileReader();
+reader.onload=e=>{customBackground.src=e.target.result;customBackground.style.display="block"};
+reader.readAsDataURL(file);
+}
+backgroundInput.addEventListener("change",function(){loadBackground(this.files[0])});
+backgroundInput2.addEventListener("change",function(){loadBackground(this.files[0])});
+
+game.addEventListener("pointerdown",function(e){
+if(e.target===startButton||e.target===restartButton||e.target.closest(".fileButton"))return;
+jump();
+});
+
+document.addEventListener("keydown",function(e){
+if(e.code==="Space"||e.code==="ArrowUp"){
+e.preventDefault();
+if(!gameRunning){if(gameOverState)startGame()}else jump();
+}});
+
+startButton.addEventListener("click",startGame);
+restartButton.addEventListener("click",startGame);
+
+birdY=game.clientHeight*.45;bird.style.top=birdY+"px";
+
+window.addEventListener("resize",function(){
+if(!gameRunning){birdY=game.clientHeight*.45;bird.style.top=birdY+"px"}
+});
+</script>
+</body>
+</html>
